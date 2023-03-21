@@ -91,12 +91,65 @@ def download(song, fileType):
 
 
 def main(data, fileType):
+    print(f"In total {len(data)} songs to download")
     t1 = Timer(len(data))  #Timer for writing ETA
     for i, song in enumerate(data):
         download(song, fileType)
         t1.printETA(i+1)
     t1.printCompleted()
     input("Press any key to end")
+
+
+def printPlayersChoiseList(players):
+    for i, player in enumerate(players):
+        print(f"{i}: {player}")
+
+
+def choosePlayers(data):
+    players = []
+    for song in data:
+        for player in song["players"]:
+            if player["name"] not in players:
+                players.append(player["name"])
+    chosenPlayers = []
+    if len(players) == 1:
+        return [data[0]["players"][0]["name"]]
+    printPlayersChoiseList(players)
+    while True:
+        print(f"Currently chosen players: {', '.join(chosenPlayers)}")
+        player = input("Give player to add or enter to continue: ")
+        if player == "" and not players:
+            print("give at least one player")
+        elif player == "":
+            return chosenPlayers
+        elif player.isdigit() and 0 <= int(player) < len(players):
+            if players[int(player)] not in chosenPlayers:
+                chosenPlayers.append(players[int(player)])
+
+
+def filterList(data):
+    newData = []
+    while True:
+        songs = input("Download (A)ll, (M)issed, (G)uessed: ")
+        if len(songs) > 0:
+            songs = songs[0].lower()
+        if songs == "m":
+            players = choosePlayers(data)
+            for song in data:
+                for player in song["players"]:
+                    if player["name"] in players and not player["correct"]:
+                        newData.append(song)
+            return newData
+        elif songs == "g":
+            players = choosePlayers(data)
+            for song in data:
+                for player in song["players"]:
+                    if player["name"] in players and player["correct"]:
+                        newData.append(song)
+            return newData
+        else:
+            print("Taking all songs")
+            return data
 
 
 if __name__ == "__main__":
@@ -108,12 +161,11 @@ if __name__ == "__main__":
         for fileName in fileList:
             data += readData(fileName)
         if goToDir(input("Give a destination directory: ")):  # Setup download directory
-            fileType = input("Video or Audio:")[0].lower()  # Only take the first letter
-            if fileType:
-                main(data, fileType)
-            else:
-                print("No file type given")
-                time.sleep(5)
+            fileType = input("Video or Audio:")  # Only take the first letter
+            filetype = fileType or "a"
+            filetype = filetype[0].lower()
+            data = filterList(data)
+            main(data, fileType)
     except Exception as e:
         traceback.print_exc()
         input("")
