@@ -49,7 +49,7 @@ def readData(fileName):
 def filterFileName(word):  # List of banned characters for windows
     bannedCharacters = ["<", ">", ":", "\"", "/", "|", "?", "*"]
     for bannedCharacter in bannedCharacters:
-        word = word.replace(bannedCharacter, " ")
+        word = word.replace(bannedCharacter, "")
     return word.strip()  # Remove extra spaces from end and beginning
 
 
