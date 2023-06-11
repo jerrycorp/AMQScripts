@@ -74,7 +74,7 @@ def findUrl(song, fileType):
 
 
 def download(song, fileType, server):
-    if server == "nl"
+    if server == "nl":
         url = findUrl(song, fileType).replace("files", "nl")  # Extract url with given file priority
     else:
         url = findUrl(song, fileType)
