@@ -73,8 +73,12 @@ def findUrl(song, fileType):
     return None
 
 
-def download(song, fileType):
-    url = findUrl(song, fileType)  # Extract url with given file priority
+def download(song, fileType, server):
+    if server == "nl"
+        url = findUrl(song, fileType).replace("files", "nl")  # Extract url with given file priority
+    else:
+        url = findUrl(song, fileType)
+
     if not url:
         print(f"No file found for:")
         print(songIntoString(song))
@@ -90,11 +94,17 @@ def download(song, fileType):
         out.write(r.content)
 
 
-def main(data, fileType):
+def chooseServer():
+    print("Server options: 'nl', 'us'")
+    return input("Choose server: ")
+
+def main(data, fileType, server):
+    
     print(f"In total {len(data)} songs to download")
     t1 = Timer(len(data))  #Timer for writing ETA
+    server = chooseServer()
     for i, song in enumerate(data):
-        download(song, fileType)
+        download(song, fileType, server)
         t1.printETA(i+1)
     t1.printCompleted()
     input("Press any key to end")
