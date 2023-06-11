@@ -98,7 +98,7 @@ def chooseServer():
     print("Server options: 'nl', 'us'")
     return input("Choose server: ")
 
-def main(data, fileType, server):
+def main(data, fileType):
     
     print(f"In total {len(data)} songs to download")
     t1 = Timer(len(data))  #Timer for writing ETA
