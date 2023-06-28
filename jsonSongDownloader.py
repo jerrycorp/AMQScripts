@@ -1,9 +1,10 @@
-import time
 import json
-import sys
-import requests
 import os
+import sys
+import time
 import traceback
+
+import requests
 
 
 class Timer:  # Class for easier ETA printing
@@ -40,7 +41,7 @@ def goToDir(dirPath):  # Go to folder for download
     return True
 
 
-def readData(fileName):
+def readSongList(fileName):
     with open(fileName, encoding='utf-8') as f:
         data = json.load(f)
     return data
@@ -63,33 +64,52 @@ def songIntoString(song):  # Function for creating file names
     return fileName
 
 
-def findUrl(song, fileType):
+def findUrl(song, fileType, server):
     priorityList = ["0", "720", "480"] if fileType == "a" else ["720", "480", "0"]
     for priority in priorityList:
         for site in song["urls"]:
             if priority in song["urls"][site]:
-                return song["urls"][site][priority]
+                if server == "nl":
+                    return song["urls"][site][priority].replace.replace("files", "nl")
+                else:
+                    return song["urls"][site][priority]
     print("No media found")
     return None
 
 
 def download(song, fileType, server):
-    if server == "nl":
-        url = findUrl(song, fileType).replace("files", "nl")  # Extract url with given file priority
-    else:
-        url = findUrl(song, fileType)
-
+    url = findUrl(song, fileType, server)
     if not url:
-        print(f"No file found for:")
-        print(songIntoString(song))
+        print(f"No file found for: {songIntoString(song)}")
         return None
-    print(f"Downloading : {songIntoString(song)}")
+    print(f"Downloading: {songIntoString(song)}")
     while True:
         r = requests.get(url, allow_redirects=True)
         if r.ok:  # failed doesn't report ok ?
             break
         else:
-            print("Download failed. Trying again")
+            try:
+                print("Download failed. Trying again in 5 seconds")
+                print("Press CTRL+C to cancel")
+                time.sleep(5)
+                print("Trying again")
+            except KeyboardInterrupt:
+                print("Choose action:")
+                choice = input("(S)kip song, (R)etry, retry (A)udio or retry (V)ideo: ")
+                if choice.lower() == "":
+                    continue
+                elif choice.lower()[0] == "s":
+                    return None
+                elif choice.lower()[0] == "r":
+                    continue
+                elif choice.lower()[0] == "a":
+                    url = findUrl(song, "a", server)
+                    continue
+                elif choice.lower()[0] == "v":
+                    url = findUrl(song, "v", server)
+                    continue
+                else:
+                    continue
     with open(songIntoString(song) + "." + url.split(".")[-1], "wb") as out:
         out.write(r.content)
 
@@ -98,9 +118,10 @@ def chooseServer():
     print("Server options: 'nl', 'us'")
     return input("Choose server: ")
 
-def main(data, fileType):
+
+def downloadSongs(data, fileType):
     print(f"In total {len(data)} songs to download")
-    t1 = Timer(len(data))  #Timer for writing ETA
+    t1 = Timer(len(data))  # Timer for writing ETA
     server = chooseServer()
     for i, song in enumerate(data):
         download(song, fileType, server)
@@ -109,7 +130,7 @@ def main(data, fileType):
     input("Press any key to end")
 
 
-def printPlayersChoiseList(players):
+def printPlayersChoiceList(players):
     for i, player in enumerate(players):
         print(f"{i}: {player}")
 
@@ -123,7 +144,7 @@ def choosePlayers(data):
     chosenPlayers = []
     if len(players) == 1:
         return [data[0]["players"][0]["name"]]
-    printPlayersChoiseList(players)
+    printPlayersChoiceList(players)
     while True:
         print(f"Currently chosen players: {', '.join(chosenPlayers)}")
         player = input("Give player to add or enter to continue: ")
@@ -161,21 +182,25 @@ def filterList(data):
             return data
 
 
-if __name__ == "__main__":
+def main():
     try:
         fileList = sys.argv[1:]  # Take a list of json file as a drag and drop
-        data = []
+        songList = []
         if not fileList:
             fileList = [input("Give name of file:")]  # If no file given as argument ask for one
         for fileName in fileList:
-            data += readData(fileName)
+            songList += readSongList(fileName)
         if goToDir(input("Give a destination directory: ")):  # Setup download directory
             fileType = input("Video or Audio:")  # Only take the first letter
             filetype = fileType or "a"
             filetype = filetype[0].lower()
-            data = filterList(data)
-            main(data, fileType)
+            songList = filterList(songList)
+            downloadSongs(songList, fileType)
     except Exception as e:
         traceback.print_exc()
         input("")
         raise e
+
+
+if __name__ == "__main__":
+    main()
