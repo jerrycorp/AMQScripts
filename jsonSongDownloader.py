@@ -84,7 +84,11 @@ def download(song, fileType, server):
         return None
     print(f"Downloading: {songIntoString(song)}")
     while True:
-        r = requests.get(url, allow_redirects=True)
+        try:
+            r = requests.get(url, allow_redirects=True)
+        except KeyboardInterrupt:
+            print(f"Download cancelled. Skipping song: {songIntoString(song)}")
+            return None
         if r.ok:  # failed doesn't report ok ?
             break
         else:
@@ -119,11 +123,11 @@ def chooseServer():
     return input("Choose server: ")
 
 
-def downloadSongs(data, fileType):
-    print(f"In total {len(data)} songs to download")
-    t1 = Timer(len(data))  # Timer for writing ETA
+def downloadSongs(songList, fileType):
+    print(f"In total {len(songList)} songs to download")
+    t1 = Timer(len(songList))  # Timer for writing ETA
     server = chooseServer()
-    for i, song in enumerate(data):
+    for i, song in enumerate(songList):
         download(song, fileType, server)
         t1.printETA(i+1)
     t1.printCompleted()
