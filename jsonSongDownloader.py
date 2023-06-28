@@ -70,7 +70,7 @@ def findUrl(song, fileType, server):
         for site in song["urls"]:
             if priority in song["urls"][site]:
                 if server == "nl":
-                    return song["urls"][site][priority].replace.replace("files", "nl")
+                    return song["urls"][site][priority].replace("files", "nl")
                 else:
                     return song["urls"][site][priority]
     print("No media found")
