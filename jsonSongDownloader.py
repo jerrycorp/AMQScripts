@@ -69,10 +69,11 @@ def findUrl(song, fileType, server):
     for priority in priorityList:
         for site in song["urls"]:
             if priority in song["urls"][site]:
+                url_end = song["urls"][site][priority]
+                url = f"https://files.catbox.moe/{url_end}"
                 if server == "nl":
-                    return song["urls"][site][priority].replace("files", "nl")
-                else:
-                    return song["urls"][site][priority]
+                    url.replace("files", "nl")
+                return url
     print("No media found")
     return None
 
@@ -99,7 +100,12 @@ def download(song, fileType, server):
                 print("Trying again")
             except KeyboardInterrupt:
                 print("Choose action:")
-                choice = input("(S)kip song, (R)etry, retry (A)udio or retry (V)ideo: ")
+                print("s: skip song")
+                print("r: retry")
+                print("a: retry audio")
+                print("v: retry video")
+                print("f: retry files")
+                choice = input("choice: ")
                 if choice.lower() == "":
                     continue
                 elif choice.lower()[0] == "s":
@@ -112,6 +118,9 @@ def download(song, fileType, server):
                 elif choice.lower()[0] == "v":
                     url = findUrl(song, "v", server)
                     continue
+                elif choice.lower()[0] == "f":
+                    url = findUrl(song, "v", "files")
+                    continue
                 else:
                     continue
     with open(songIntoString(song) + "." + url.split(".")[-1], "wb") as out:
@@ -119,7 +128,7 @@ def download(song, fileType, server):
 
 
 def chooseServer():
-    print("Server options: 'nl', 'us'")
+    print("Server options: 'nl', 'files'")
     return input("Choose server: ")
 
 
@@ -164,7 +173,7 @@ def choosePlayers(data):
 def filterList(data):
     newData = []
     while True:
-        songs = input("Download (A)ll, (M)issed, (G)uessed: ")
+        songs = input("Download All, Missed, Guessed: ")
         if len(songs) > 0:
             songs = songs[0].lower()
         if songs == "m":
@@ -195,7 +204,7 @@ def main():
         for fileName in fileList:
             songList += readSongList(fileName)
         if goToDir(input("Give a destination directory: ")):  # Setup download directory
-            fileType = input("Video or Audio:")  # Only take the first letter
+            fileType = input("Video or Audio: ")  # Only take the first letter
             filetype = fileType or "a"
             filetype = filetype[0].lower()
             songList = filterList(songList)
