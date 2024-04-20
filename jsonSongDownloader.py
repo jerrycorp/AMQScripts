@@ -1,9 +1,10 @@
-import time
 import json
-import sys
-import requests
 import os
+import sys
+import time
 import traceback
+
+import requests
 
 
 class Timer:  # Class for easier ETA printing
@@ -40,7 +41,7 @@ def goToDir(dirPath):  # Go to folder for download
     return True
 
 
-def readData(fileName):
+def readSongList(fileName):
     with open(fileName, encoding='utf-8') as f:
         data = json.load(f)
     return data
@@ -63,44 +64,86 @@ def songIntoString(song):  # Function for creating file names
     return fileName
 
 
-def findUrl(song, fileType):
+def findUrl(song, fileType, server):
     priorityList = ["0", "720", "480"] if fileType == "a" else ["720", "480", "0"]
     for priority in priorityList:
         for site in song["urls"]:
             if priority in song["urls"][site]:
-                return song["urls"][site][priority]
+                url_end = song["urls"][site][priority]
+                url = f"https://files.catbox.moe/{url_end}"
+                if server == "nl":
+                    url.replace("files", "nl")
+                return url
     print("No media found")
     return None
 
 
-def download(song, fileType):
-    url = findUrl(song, fileType)  # Extract url with given file priority
+def download(song, fileType, server):
+    url = findUrl(song, fileType, server)
     if not url:
-        print(f"No file found for:")
-        print(songIntoString(song))
+        print(f"No file found for: {songIntoString(song)}")
         return None
-    print(f"Downloading : {songIntoString(song)}")
+    print(f"Downloading: {songIntoString(song)}")
     while True:
-        r = requests.get(url, allow_redirects=True)
+        try:
+            r = requests.get(url, allow_redirects=True)
+        except KeyboardInterrupt:
+            print(f"Download cancelled. Skipping song: {songIntoString(song)}")
+            return None
         if r.ok:  # failed doesn't report ok ?
             break
         else:
-            print("Download failed. Trying again")
+            try:
+                print("Download failed. Trying again in 5 seconds")
+                print("Press CTRL+C to cancel")
+                time.sleep(5)
+                print("Trying again")
+            except KeyboardInterrupt:
+                print("Choose action:")
+                print("s: skip song")
+                print("r: retry")
+                print("a: retry audio")
+                print("v: retry video")
+                print("f: retry files")
+                choice = input("choice: ")
+                if choice.lower() == "":
+                    continue
+                elif choice.lower()[0] == "s":
+                    return None
+                elif choice.lower()[0] == "r":
+                    continue
+                elif choice.lower()[0] == "a":
+                    url = findUrl(song, "a", server)
+                    continue
+                elif choice.lower()[0] == "v":
+                    url = findUrl(song, "v", server)
+                    continue
+                elif choice.lower()[0] == "f":
+                    url = findUrl(song, "v", "files")
+                    continue
+                else:
+                    continue
     with open(songIntoString(song) + "." + url.split(".")[-1], "wb") as out:
         out.write(r.content)
 
 
-def main(data, fileType):
-    print(f"In total {len(data)} songs to download")
-    t1 = Timer(len(data))  #Timer for writing ETA
-    for i, song in enumerate(data):
-        download(song, fileType)
+def chooseServer():
+    print("Server options: 'nl', 'files'")
+    return input("Choose server: ")
+
+
+def downloadSongs(songList, fileType):
+    print(f"In total {len(songList)} songs to download")
+    t1 = Timer(len(songList))  # Timer for writing ETA
+    server = chooseServer()
+    for i, song in enumerate(songList):
+        download(song, fileType, server)
         t1.printETA(i+1)
     t1.printCompleted()
     input("Press any key to end")
 
 
-def printPlayersChoiseList(players):
+def printPlayersChoiceList(players):
     for i, player in enumerate(players):
         print(f"{i}: {player}")
 
@@ -114,7 +157,7 @@ def choosePlayers(data):
     chosenPlayers = []
     if len(players) == 1:
         return [data[0]["players"][0]["name"]]
-    printPlayersChoiseList(players)
+    printPlayersChoiceList(players)
     while True:
         print(f"Currently chosen players: {', '.join(chosenPlayers)}")
         player = input("Give player to add or enter to continue: ")
@@ -130,7 +173,7 @@ def choosePlayers(data):
 def filterList(data):
     newData = []
     while True:
-        songs = input("Download (A)ll, (M)issed, (G)uessed: ")
+        songs = input("Download All, Missed, Guessed: ")
         if len(songs) > 0:
             songs = songs[0].lower()
         if songs == "m":
@@ -152,21 +195,25 @@ def filterList(data):
             return data
 
 
-if __name__ == "__main__":
+def main():
     try:
         fileList = sys.argv[1:]  # Take a list of json file as a drag and drop
-        data = []
+        songList = []
         if not fileList:
             fileList = [input("Give name of file:")]  # If no file given as argument ask for one
         for fileName in fileList:
-            data += readData(fileName)
+            songList += readSongList(fileName)
         if goToDir(input("Give a destination directory: ")):  # Setup download directory
-            fileType = input("Video or Audio:")  # Only take the first letter
+            fileType = input("Video or Audio: ")  # Only take the first letter
             filetype = fileType or "a"
             filetype = filetype[0].lower()
-            data = filterList(data)
-            main(data, fileType)
+            songList = filterList(songList)
+            downloadSongs(songList, fileType)
     except Exception as e:
         traceback.print_exc()
         input("")
         raise e
+
+
+if __name__ == "__main__":
+    main()
