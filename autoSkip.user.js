@@ -6,9 +6,9 @@
 // @author       jerrycorp
 // @match        https://animemusicquiz.com/*
 // @grant        none
-// @downloadURL  https://github.com/jerrycorp/AMQScripts/raw/master/autoSkip.user.js
-// @updateURL    https://github.com/jerrycorp/AMQScripts/raw/master/autoSkip.user.js
-// @require      https://raw.githubusercontent.com/joske2865/AMQ-Scripts/master/common/amqScriptInfo.js
+// @downloadURL  https://github.com/jerrycorp/AMQScripts/raw/main/autoSkip.user.js
+// @updateURL    https://github.com/jerrycorp/AMQScripts/raw/main/autoSkip.user.js
+// @require      https://raw.githubusercontent.com/joske2865/AMQ-Scripts/main/common/amqScriptInfo.js
 // ==/UserScript==
 
 let active_interval = null;
@@ -81,7 +81,7 @@ AMQ_addScriptData({
     name: "Song Skipper",
     author: "jerrycorp",
     version: "0.1",
-    link: "https://github.com/jerrycorp/AMQScripts/raw/master/autoSkip.user.js",
+    link: "https://github.com/jerrycorp/AMQScripts/raw/main/autoSkip.user.js",
     description: `
         <p>Adds an option to skip songs automatically. Only use when other people</p>
         <p>are also playing without this script. Use ALT+T to toggle on/off.</p>
