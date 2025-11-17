@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AMQ Song skipper
 // @namespace    https://github.com/jerrycorp
-// @version      0.1
+// @version      0.2
 // @description  Skips songs automatically
 // @author       jerrycorp
 // @match        https://animemusicquiz.com/*
